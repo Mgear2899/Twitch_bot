@@ -33,6 +33,8 @@ var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
 // arr[1:3] // [2, 9990, 4]
 var warning = make(map[string]int)
 
+var timers = make(map[int]int)
+
 //var time = make(map[string]int)
 
 func main() {
@@ -51,7 +53,9 @@ func main() {
 
 	// приветствие зрителя
 	client.OnUserJoinMessage(func(message twitch.UserJoinMessage) {
-		fmt.Println(message.User, "зашел в чат")
+		t := time.Now().Format("15:04")
+		fmt.Printf("%s = ", t)
+		fmt.Println(message.User, "- зашел в чат")
 
 		if message.User == "mrjohnbot" {
 			fmt.Println("Yes, se-e-er!")
@@ -210,6 +214,22 @@ says:
 			if values == findJohn {
 				client.Say(message.Channel, message.User.Name+", да, сэ-э-эр!")
 				break says
+			}
+		}
+	}
+
+	ticker := time.Tick(time.Second)
+time:
+	for _, quest := range saySay {
+		if quest == "время" {
+			for {
+				select {
+				case <-ticker:
+					timers[1]++
+					fmt.Printf("%s", timers)
+					client.Say(message.Channel, "q")
+					break time
+				}
 			}
 		}
 	}
