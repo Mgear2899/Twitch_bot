@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -16,28 +17,15 @@ import (
 
 const (
 	cahnnel = "monstrum_gear"
-	// mapa     = map[string]string{
-	// 	"one":  "two",
-	// 	"tree": "four",
-	// }
-	// number  = 123123
 )
 
-// var channels = [...]string{"golum_gear", "monstrum_gear", "night_delirium"}
-
-// var channel = "monstrum_gear"
-
 var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
-// arr[2] = 99990
-// arr = append(arr, 549868345)
-// arr[1:3] // [2, 9990, 4]
 var warning = make(map[string]int)
-
 var timers = make(map[int]int)
 
-//var time = make(map[string]int)
-
 func main() {
+	go htmlHH()
+
 	client := twitch.NewClient("mrJohnBot", "oauth:nwaoopj79z91twfuts32tbnm4pe5d7")
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
@@ -53,7 +41,7 @@ func main() {
 
 	// приветствие зрителя
 	client.OnUserJoinMessage(func(message twitch.UserJoinMessage) {
-		t := time.Now().Format("15:04")
+		t := time.Now().Format("15:04:05")
 		fmt.Printf("%s = ", t)
 		fmt.Println(message.User, "- зашел в чат")
 
@@ -233,4 +221,21 @@ time:
 			}
 		}
 	}
+}
+
+func htmlHH() {
+	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	file := "gif.html"
+
+	// 	// data := "100.gif"
+	// 	// // tmpl, _ := template.ParseFiles("gif.html")
+	// 	// tmpl, _ := template.ParseGlob("gif.html")
+	// 	// tmpl.Execute(w, data)
+	// })
+
+	fs := http.FileSystem.Open("gif")(`/`)
+	http.Handle("/", fs)
+
+	log.Println("Listening...")
+	http.ListenAndServe(":3000", nil)
 }
