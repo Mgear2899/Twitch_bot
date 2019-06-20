@@ -16,15 +16,21 @@ import (
 )
 
 const (
-	cahnnel = "monstrum_gear"
+	// cahnnel = "monstrum_gear"
+	cahnnel = "golum_gear"
 )
+
+type page struct {
+	Title string
+	Msg   string
+}
 
 var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
 var warning = make(map[string]int)
 var timers = make(map[int]int)
 
 func main() {
-	go htmlHH()
+	// go htmlHH(w, *Request)
 
 	client := twitch.NewClient("mrJohnBot", "oauth:nwaoopj79z91twfuts32tbnm4pe5d7")
 
@@ -84,6 +90,11 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	// отобразить gif или png
+	http.HandleFunc("/lo", htmlHH)
+	http.HandleFunc("/", htmlHH)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func badWords(client *twitch.Client, message twitch.PrivateMessage) {
@@ -223,19 +234,11 @@ time:
 	}
 }
 
-func htmlHH() {
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	file := "gif.html"
+func htmlHH(w http.ResponseWriter, _ *http.Request) {
+	file, _ := ioutil.ReadFile("twitch.png")
+	w.Write(file)
 
-	// 	// data := "100.gif"
-	// 	// // tmpl, _ := template.ParseFiles("gif.html")
-	// 	// tmpl, _ := template.ParseGlob("gif.html")
-	// 	// tmpl.Execute(w, data)
-	// })
-
-	fs := http.FileSystem.Open("gif")(`/`)
-	http.Handle("/", fs)
-
-	log.Println("Listening...")
-	http.ListenAndServe(":3000", nil)
+	// logo, _ := func(w http.ResponseWriter, _ *http.Request) {
+	// 	ioutil.ReadFile("logo.gif")
+	// }
 }
