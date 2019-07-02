@@ -5,13 +5,13 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	twi "github.com/Onestay/go-new-twitch"
 	twitch "github.com/gempir/go-twitch-irc"
 )
 
@@ -19,19 +19,26 @@ const (
 	cahnnel = "monstrum_gear"
 )
 
+var reply = map[string]string{
+	"yes": "Да",
+	"no":  "Нет",
+}
+
 var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
 var warning = make(map[string]int)
 var timers = make(map[int]int)
 
 func main() {
-	go htmlHH()
+	// go htmlHH()
+	// вывод инфы по стриму
+	go stream()
 
 	client := twitch.NewClient("mrJohnBot", "oauth:nwaoopj79z91twfuts32tbnm4pe5d7")
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		countMessages(client, message)
 		badWords(client, message)
-		sayTalk(client, message)
+		go sayTalk(client, message)
 	})
 
 	// sub, resub and raids
@@ -47,8 +54,9 @@ func main() {
 
 		if message.User == "mrjohnbot" {
 			fmt.Println("Yes, se-e-er!")
-		} else {
-			client.Say(message.Channel, "Тебя приветствует mr. John, "+message.User+", я слежу за порядком в чатике!!!")
+		} else if message.User == "integra_atreides" {
+			// client.Say(message.Channel, "Тебя приветствует mr. John, "+message.User+", я слежу за порядком в чатике!!!")
+			client.Say(message.Channel, "Здравствуй, "+message.User+", я mr. John. И могу следить за порядком в чатике!")
 		}
 		// Позвольте вас поприветствовать и представиться users.
 		// Я mister John и в мои обязанности входит следить за порядком в чате
@@ -76,9 +84,7 @@ func main() {
 		go mesWar(client)
 	})
 
-	// for _, oneChanel := range channels {
 	client.Join(cahnnel)
-	// }
 
 	err := client.Connect()
 	if err != nil {
@@ -150,7 +156,7 @@ func countMessages(client *twitch.Client, message twitch.PrivateMessage) {
 // функция вывода рандомных сообщений
 func mesWar(client *twitch.Client) {
 	// каждые 15 минут выводит сообщение
-	ticker := time.NewTicker(time.Minute * 20)
+	ticker := time.NewTicker(time.Minute * 5)
 
 	// карта с фразами
 	randomMes := [...]string{
@@ -190,7 +196,7 @@ func subResub(client *twitch.Client, message twitch.UserNoticeMessage) {
 func sayTalk(client *twitch.Client, message twitch.PrivateMessage) {
 	// обращение к мистеру Джону
 	nameJohn := [...]string{
-		"John", "Джон", "mr. John", "mr. Jon", "mrJohnBot",
+		"John", "Джон", "mr. John", "mr. Jon", "mrJohnBot", "mrjohnbot",
 	}
 
 	reg := regexp.MustCompile(`[a-zA-Zа-яА-Я]+`)
@@ -206,36 +212,34 @@ says:
 		}
 	}
 
-	ticker := time.Tick(time.Second)
+	// ticker := time.Tick(time.Second)
+	// tickers := time.NewTicker(time.Second * 1)
+	c := time.Tick(1 * time.Second)
 time:
-	for _, quest := range saySay {
-		if quest == "время" {
-			for {
-				select {
-				case <-ticker:
-					timers[1]++
-					fmt.Printf("%s", timers)
-					client.Say(message.Channel, "q")
-					break time
-				}
+	for _, timer := range saySay {
+		if timer == "время" {
+			for now := range c {
+				fmt.Println("Стрим идет - ", now.Format("15:04:05"))
+				break time
 			}
+		}
+	}
+tel:
+	for _, tel := range saySay {
+		if tel == "tel" {
+			client.Say(message.Channel, message.User.Name+" https://t.me/joinchat/AAAAAFGAVk9hZ7vAci-mNQ")
+			break tel
 		}
 	}
 }
 
-func htmlHH() {
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	file := "gif.html"
+func stream() {
+	client := twi.NewClient("l2ttf7dt9q32p1tmlx4yp7p0sfs3ua")
 
-	// 	// data := "100.gif"
-	// 	// // tmpl, _ := template.ParseFiles("gif.html")
-	// 	// tmpl, _ := template.ParseGlob("gif.html")
-	// 	// tmpl.Execute(w, data)
-	// })
+	user, err := client.GetUsersByLogin("monstrum_gear")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	fs := http.FileSystem.Open("gif")(`/`)
-	http.Handle("/", fs)
-
-	log.Println("Listening...")
-	http.ListenAndServe(":3000", nil)
+	fmt.Println(user[0].BroadcasterType)
 }
