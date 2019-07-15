@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	twi "github.com/Onestay/go-new-twitch"
+	// twi "github.com/Onestay/go-new-twitch"
 	twitch "github.com/gempir/go-twitch-irc"
 )
 
@@ -26,12 +26,12 @@ var reply = map[string]string{
 
 var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
 var warning = make(map[string]int)
-var timers = make(map[int]int)
+var timemap = make(map[time.Duration]int)
 
 func main() {
 	// go htmlHH()
 	// вывод инфы по стриму
-	go stream()
+	// go stream()
 
 	client := twitch.NewClient("mrJohnBot", "oauth:nwaoopj79z91twfuts32tbnm4pe5d7")
 
@@ -39,6 +39,7 @@ func main() {
 		countMessages(client, message)
 		badWords(client, message)
 		go sayTalk(client, message)
+		go timeStart(message)
 	})
 
 	// sub, resub and raids
@@ -156,7 +157,7 @@ func countMessages(client *twitch.Client, message twitch.PrivateMessage) {
 // функция вывода рандомных сообщений
 func mesWar(client *twitch.Client) {
 	// каждые 15 минут выводит сообщение
-	ticker := time.NewTicker(time.Minute * 5)
+	ticker := time.NewTicker(time.Minute * 20)
 
 	// карта с фразами
 	randomMes := [...]string{
@@ -166,7 +167,6 @@ func mesWar(client *twitch.Client) {
 		"Я не спасся. Меня убили… Обожаю эту шутку.",
 		"Эта драка бессмысленна. Как и твоё сопротивление.",
 		"BloodTrail",
-		"Squid1 Squid2 Squid3 Squid4 - Я знал что он водится!!!",
 		"mr. John еще сдесь :)",
 		"Моя жизнь, это то во что ты её превратил...",
 	}
@@ -212,18 +212,7 @@ says:
 		}
 	}
 
-	// ticker := time.Tick(time.Second)
-	// tickers := time.NewTicker(time.Second * 1)
-	c := time.Tick(1 * time.Second)
-time:
-	for _, timer := range saySay {
-		if timer == "время" {
-			for now := range c {
-				fmt.Println("Стрим идет - ", now.Format("15:04:05"))
-				break time
-			}
-		}
-	}
+	// ссылка в телеграм
 tel:
 	for _, tel := range saySay {
 		if tel == "tel" {
@@ -231,15 +220,25 @@ tel:
 			break tel
 		}
 	}
+
 }
 
-func stream() {
-	client := twi.NewClient("l2ttf7dt9q32p1tmlx4yp7p0sfs3ua")
+func timeStart(message twitch.PrivateMessage) {
+	reg := regexp.MustCompile(`[a-zA-Zа-яА-Я]+`)
+	saySay := reg.FindAllString(message.Message, -1)
 
-	user, err := client.GetUsersByLogin("monstrum_gear")
-	if err != nil {
-		fmt.Println(err)
+	// ticktime := time.NewTicker(time.Second * 1)
+
+	start := time.Now()
+	elapsed := time.Since(start)
+	timemap[elapsed]++
+	// calc := start.Second() - timemap[0]
+
+time:
+	for _, timer := range saySay {
+		if timer == "время" {
+			fmt.Println("Стрим идет - ", start.Second()-timemap[1])
+			break time
+		}
 	}
-
-	fmt.Println(user[0].BroadcasterType)
 }
