@@ -26,12 +26,9 @@ var reply = map[string]string{
 
 var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
 var warning = make(map[string]int)
-var timemap = make(map[time.Duration]int)
+var startTime = time.Now()
 
 func main() {
-	// go htmlHH()
-	// вывод инфы по стриму
-	// go stream()
 
 	client := twitch.NewClient("mrJohnBot", "oauth:nwaoopj79z91twfuts32tbnm4pe5d7")
 
@@ -39,7 +36,7 @@ func main() {
 		countMessages(client, message)
 		badWords(client, message)
 		go sayTalk(client, message)
-		go timeStart(message)
+		router(client, message)
 	})
 
 	// sub, resub and raids
@@ -52,12 +49,11 @@ func main() {
 		t := time.Now().Format("15:04:05")
 		fmt.Printf("%s = ", t)
 		fmt.Println(message.User, "- зашел в чат")
-
 		if message.User == "mrjohnbot" {
 			fmt.Println("Yes, se-e-er!")
-		} else if message.User == "integra_atreides" {
+		} else if message.User == "стример" {
 			// client.Say(message.Channel, "Тебя приветствует mr. John, "+message.User+", я слежу за порядком в чатике!!!")
-			client.Say(message.Channel, "Здравствуй, "+message.User+", я mr. John. И могу следить за порядком в чатике!")
+			client.Say(message.Channel, "Здравствуй, "+message.User+", я mr. John. И умею следить за порядком в чатике!")
 		}
 		// Позвольте вас поприветствовать и представиться users.
 		// Я mister John и в мои обязанности входит следить за порядком в чате
@@ -167,7 +163,6 @@ func mesWar(client *twitch.Client) {
 		"Я не спасся. Меня убили… Обожаю эту шутку.",
 		"Эта драка бессмысленна. Как и твоё сопротивление.",
 		"BloodTrail",
-		"mr. John еще сдесь :)",
 		"Моя жизнь, это то во что ты её превратил...",
 	}
 
@@ -211,34 +206,28 @@ says:
 			}
 		}
 	}
-
-	// ссылка в телеграм
-tel:
-	for _, tel := range saySay {
-		if tel == "tel" {
-			client.Say(message.Channel, message.User.Name+" https://t.me/joinchat/AAAAAFGAVk9hZ7vAci-mNQ")
-			break tel
-		}
-	}
-
 }
 
-func timeStart(message twitch.PrivateMessage) {
-	reg := regexp.MustCompile(`[a-zA-Zа-яА-Я]+`)
-	saySay := reg.FindAllString(message.Message, -1)
-
-	// ticktime := time.NewTicker(time.Second * 1)
-
-	start := time.Now()
-	elapsed := time.Since(start)
-	timemap[elapsed]++
-	// calc := start.Second() - timemap[0]
-
-time:
-	for _, timer := range saySay {
-		if timer == "время" {
-			fmt.Println("Стрим идет - ", start.Second()-timemap[1])
-			break time
-		}
+func router(client *twitch.Client, message twitch.PrivateMessage) {
+	switch message.Message {
+	case "!Время":
+		client.Say(message.Channel, "С начала срима прошло - "+printElapsedTime())
+		break
+		// ссылка в телеграм
+	case "!tel":
+		client.Say(message.Channel, message.User.Name+" https://t.me/joinchat/AAAAAFGAVk9hZ7vAci-mNQ")
+		break
 	}
+}
+
+func printElapsedTime() string {
+	elapsed := time.Since(startTime)
+
+	elapsed = elapsed.Round(time.Minute)
+	h := elapsed / time.Hour
+	elapsed -= h * time.Hour
+	m := elapsed / time.Minute
+
+	return fmt.Sprintf("%02d Часов %02d Минут", h, m)
+
 }
