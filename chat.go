@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -12,31 +13,28 @@ import (
 	"time"
 
 	// twi "github.com/Onestay/go-new-twitch"
+	"github.com/PuerkitoBio/goquery"
+
 	twitch "github.com/gempir/go-twitch-irc"
 )
-
-const (
-	cahnnel = "monstrum_gear"
-)
-
-var reply = map[string]string{
-	"yes": "Да",
-	"no":  "Нет",
-}
 
 var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
 var warning = make(map[string]int)
 var startTime = time.Now()
 
 func main() {
+	client := twitch.NewClient("mrJohnBot", "oauth:u5sfiw5i6cawt7kgkmwsnrk55c6g9h")
 
-	client := twitch.NewClient("mrJohnBot", "oauth:nwaoopj79z91twfuts32tbnm4pe5d7")
+	chaArg := os.Args[1:]
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		countMessages(client, message)
 		badWords(client, message)
 		go sayTalk(client, message)
 		router(client, message)
+		shareNetwork(client, message)
+		go mesWar(client, message)
+		// aiSpeak(message)
 	})
 
 	// sub, resub and raids
@@ -59,7 +57,6 @@ func main() {
 		// Я mister John и в мои обязанности входит следить за порядком в чате
 
 		// запись статистики в файл
-		readText := []byte(message.User)
 		read, err := os.OpenFile("Отчет по трансляции.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) // да здесь много непонятных букв.
 		// os.O_APPEND|os.O_CREATE|os.O_WRONLY, - это раздешения на файл, скоторыми он пытается создать его
 		// os.O_APPEND - запись в конец файла, os.O_CREATE - либо создание нового файла, os.O_WRONLY - либо запись в пустой существующий файл
@@ -70,18 +67,17 @@ func main() {
 		defer read.Close()
 
 		// вот это будет каждый раз записывать строчку в конец файла!
-		// по идее должно работать
-		if _, err := read.Write([]byte(", " + message.User + ", ")); err != nil {
+		if _, err := read.Write([]byte(t + " - " + message.User + "\n ")); err != nil {
 			log.Panic(err)
 		}
-		read.Write(readText)
+
 	})
 
-	client.OnConnect(func() {
-		go mesWar(client)
-	})
+	// client.OnConnect(func() {
+	// 	go mesWar(client)
+	// })
 
-	client.Join(cahnnel)
+	client.Join(chaArg[0])
 
 	err := client.Connect()
 	if err != nil {
@@ -91,7 +87,7 @@ func main() {
 
 func badWords(client *twitch.Client, message twitch.PrivateMessage) {
 	// ПРОВЕРКА НА ПЛОХИЕ СЛОВА!!!
-	rer, err := ioutil.ReadFile("mat.txt")
+	rer, err := ioutil.ReadFile("word.bad")
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -137,7 +133,7 @@ mm:
 func countMessages(client *twitch.Client, message twitch.PrivateMessage) {
 	messagesm[message.User.Name]++
 	fmt.Println(messagesm)
-	if message.Message == "use!" {
+	if message.Message == "!use" {
 		var answer string
 		users, err := client.Userlist(message.Channel) // client.Userlist(channel) - список зрителей
 		if err != nil {
@@ -151,7 +147,7 @@ func countMessages(client *twitch.Client, message twitch.PrivateMessage) {
 }
 
 // функция вывода рандомных сообщений
-func mesWar(client *twitch.Client) {
+func mesWar(client *twitch.Client, message twitch.PrivateMessage) {
 	// каждые 15 минут выводит сообщение
 	ticker := time.NewTicker(time.Minute * 20)
 
@@ -171,19 +167,12 @@ func mesWar(client *twitch.Client) {
 		leng := len(randomMes)
 		randomNumber := rand.Intn(leng)
 		randomPhrase := randomMes[randomNumber]
-		// for _, oneChanel := range channels {
-		client.Say(cahnnel, randomPhrase)
-		// }
+		client.Say(message.Channel, randomPhrase)
 	}
-	// go get -u all
-	// for i := 0; i < 10; i++ {
-
-	// }
-	// fmt.Println(randomMes)
 }
 
 func subResub(client *twitch.Client, message twitch.UserNoticeMessage) {
-	client.Say(cahnnel, message.User.Name+" подписался! TwitchVotes "+message.SystemMsg)
+	client.Say(message.Channel, message.User.Name+" подписался! TwitchVotes "+message.SystemMsg)
 	fmt.Println(message.MsgID, message.MsgParams, message.SystemMsg, message.Tags)
 }
 
@@ -191,7 +180,7 @@ func subResub(client *twitch.Client, message twitch.UserNoticeMessage) {
 func sayTalk(client *twitch.Client, message twitch.PrivateMessage) {
 	// обращение к мистеру Джону
 	nameJohn := [...]string{
-		"John", "Джон", "mr. John", "mr. Jon", "mrJohnBot", "mrjohnbot",
+		"John", "Джон", "mr. John", "mr. Jon", "mrJohnBot", "mrjohnbot", "jon", "john",
 	}
 
 	reg := regexp.MustCompile(`[a-zA-Zа-яА-Я]+`)
@@ -201,7 +190,7 @@ says:
 	for _, values := range saySay {
 		for _, findJohn := range nameJohn {
 			if values == findJohn {
-				client.Say(message.Channel, message.User.Name+", да, сэ-э-эр!")
+				client.Say(message.Channel, ", да, сэ-э-эр!")
 				break says
 			}
 		}
@@ -220,14 +209,48 @@ func router(client *twitch.Client, message twitch.PrivateMessage) {
 	}
 }
 
+// вывод вркмени в чат с начала трансляции отсчет
+const (
+	pars = "72h3m0.5s"
+	now  = "15:04:05"
+)
+
 func printElapsedTime() string {
 	elapsed := time.Since(startTime)
+	// elapsed = elapsed.Round(time.Minute)
+	// h := elapsed / time.Hour
+	// elapsed -= h * time.Hour
+	// m := elapsed / time.Minute
+	spl := strings.Replace(elapsed.String(), "h", ":", 2)
 
-	elapsed = elapsed.Round(time.Minute)
-	h := elapsed / time.Hour
-	elapsed -= h * time.Hour
-	m := elapsed / time.Minute
+	return fmt.Sprintf("%s", spl)
+}
 
-	return fmt.Sprintf("%02d Часов %02d Минут", h, m)
+func shareNetwork(client *twitch.Client, message twitch.PrivateMessage) {
+	reg := regexp.MustCompile(`Поиск\/`)
+	saySay := reg.FindAllString(message.Message, -1)
 
+share:
+	for _, values := range saySay {
+		if values == "Поиск/" {
+			regsha := regexp.MustCompile(`\/.+`)
+
+			sayShare := regsha.FindAllString(message.Message, -1)
+			for _, val := range sayShare {
+				sha, err := http.Get("https://ru.wikipedia.org/wiki" + val)
+				if err != nil {
+					fmt.Println(err)
+				}
+				defer sha.Body.Close()
+
+				pars, err := goquery.NewDocumentFromReader(sha.Body)
+				if err != nil {
+					log.Fatal(err)
+				}
+				client.Say(message.Channel, pars.Find(".mw-parser-output p").First().Text())
+			}
+			break share
+		}
+
+	}
 }
