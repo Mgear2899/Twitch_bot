@@ -72,7 +72,7 @@ func main() {
 
 	client := twitch.NewClient("mrJohnBot", "oauth:u5sfiw5i6cawt7kgkmwsnrk55c6g9h")
 	// guichat.InitGui(client * twitch.)
-	chaArg := "monstrumgear" // os.Args[1:]
+	chaArg := "" // os.Args[1:] наименование канала нужно прописать.
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		logChat(message)
