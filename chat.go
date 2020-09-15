@@ -15,18 +15,15 @@ import (
 	"strings"
 	"time"
 
-	// "twitchBot/wikijohn"
 	"unicode/utf8"
-
-	// twi "github.com/Onestay/go-new-twitch"
 
 	"github.com/PuerkitoBio/goquery"
 
-	twitch "github.com/gempir/go-twitch-irc/v2" // "github.com/gempir/go-twitch-irc"
+	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/zmb3/spotify"
 )
 
-var messagesm = make(map[string]int) // var arr = []int{1, 2, 3, 4}
+var messagesm = make(map[string]int)
 var warning = make(map[string]int)
 var startTime = time.Now()
 var wordRes []string
@@ -186,16 +183,10 @@ func countMessages(client *twitch.Client, chaArg string, message twitch.PrivateM
 // функция вывода рандомных сообщений
 func mesWar(client *twitch.Client, message twitch.PrivateMessage, chaArg string) {
 	// каждые 15 минут выводит сообщение
-	ticker := time.NewTicker(time.Minute * 20)
+	ticker := time.NewTicker(time.Minute * 15)
 
 	// карта с фразами
 	randomMes := [...]string{
-		"Подписаться на канал это пол дела, надо сидеть на стриме! (c)",
-		"— Это мой первый бой. Что мне делать? — Не умирать.",
-		"Война. Война никогда не меняется.",
-		"Я не спасся. Меня убили… Обожаю эту шутку.",
-		"Эта драка бессмысленна. Как и твоё сопротивление.",
-		"Моя жизнь, это то во что ты её превратил...",
 		"Попробуй команду Поиск/ (пример: Поиск/шаман)",
 	}
 
@@ -217,7 +208,6 @@ func subResub(client *twitch.Client, message twitch.PrivateMessage, user twitch.
 
 // обращение, команды к боту
 func sayTalk(client *twitch.Client, message twitch.PrivateMessage, chaArg string) {
-	// обращение к мистеру Джону
 	nameJohn := [...]string{
 		"John", "Джон", "mr. John", "mr. Jon", "mrJohnBot", "mrjohnbot", "jon", "john",
 	}
