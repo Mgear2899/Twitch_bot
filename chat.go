@@ -70,8 +70,8 @@ func update() {
 func main() {
 	update()
 
-	client := twitch.NewClient("mrJohnBot", "oauth:u5sfiw5i6cawt7kgkmwsnrk55c6g9h")
-	// guichat.InitGui(client * twitch.)
+	client := twitch.NewClient("nickname", "oauth")
+
 	chaArg := "" // os.Args[1:] наименование канала нужно прописать.
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
